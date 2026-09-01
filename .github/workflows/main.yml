@@ -1,1 +1,53 @@
-Signal main → workflow trigger → qaRemote build → test → första verkliga fel
+name: GhostChat Main Verification
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa-remote:
+    name: QA Remote Build & Test
+    runs-on: ubuntu-latest-8-cores
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          lfs: true
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
+        with:
+          cache-read-only: true
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: QA Remote build and tests
+        env:
+          SIGNAL_BUILD_CACHE_URL: ${{ secrets.SIGNAL_BUILD_CACHE_URL }}
+          SIGNAL_BUILD_CACHE_USER: ${{ secrets.SIGNAL_BUILD_CACHE_USER }}
+          SIGNAL_BUILD_CACHE_PASSWORD: ${{ secrets.SIGNAL_BUILD_CACHE_PASSWORD }}
+          SIGNAL_BUILD_CACHE_PUSH: false
+        run: ./gradlew qaRemote
+
+      - name: Archive reports on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: main-verification-reports
+          path: |
+            **/build/reports
+            **/build/test-results
+          if-no-files-found: ignore
