@@ -54,3 +54,9 @@ jobs:
           **/build/reports
           **/build/test-results
         if-no-files-found: ignore
+Requested labels: ubuntu-latest-8-cores
+Job defined at: TempleEU/Signal-Android/.github/workflows/android.yml@refs/heads/main
+Waiting for a runner to pick up this job...
+Evaluating build.if
+Evaluating: success()
+Result: true
