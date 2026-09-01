@@ -1,0 +1,1 @@
+CI trigger marker for the main-branch verification cycle. No application behavior changes.
